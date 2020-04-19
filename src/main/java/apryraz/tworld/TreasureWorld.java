@@ -58,9 +58,9 @@ public class TreasureWorld {
     public static void main(String[] args) throws
             IOException, ContradictionException, TimeoutException {
 
-        if (args.length < 5) {
-            System.out.println("You must specify all arguments needed");
-        } else {
+        //if (args.length < 5) {
+          //  System.out.println("You must specify all arguments needed");
+        //} else {
             int wDim = 4;//Integer.parseInt(args[0]);
             int tX = 3;//Integer.parseInt(args[1]);
             int tY = 3;//Integer.parseInt(args[2]);
@@ -68,7 +68,7 @@ public class TreasureWorld {
             String fileSteps = "tests/steps1.txt";//args[4];
             String filePirates = "tests/pirates1.txt";//args[5];
             runStepsSequence(wDim,tX,tY,numSteps,fileSteps,filePirates);
-        }
+        //}
     }
     //TODO: TreasureWorld -> check if pirate positions needed or just done
      /*     TreasureWorldEnv -> check if metalsensorReading is working

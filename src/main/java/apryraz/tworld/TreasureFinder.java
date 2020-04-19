@@ -98,7 +98,7 @@ public class TreasureFinder {
 
         try {
             solver = buildGamma();
-        } catch (IOException | ContradictionException ex) {
+        } catch (ContradictionException ex) {
             Logger.getLogger(TreasureFinder.class.getName()).log(Level.SEVERE, null, ex);
         }
         numMovements = 0;
@@ -313,8 +313,8 @@ public class TreasureFinder {
         switch (detects){
             case "1":
                 addClause(x,y,+1,DetectorOffset);
-                for (int i = 0; i < WorldDim; i++) {
-                    for (int j = 0; j < WorldDim; j++) {
+                for (int i = 1; i <= WorldDim; i++) {
+                    for (int j = 1; j <= WorldDim; j++) {
                         if(x==i && y==j){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
@@ -322,8 +322,8 @@ public class TreasureFinder {
                 }
             case "2":
                 addClause(x,y,+1,DetectorOffset);
-                for (int i = 0; i < WorldDim; i++) {
-                    for (int j = 0; j < WorldDim; j++) {
+                for (int i = 1; i <= WorldDim; i++) {
+                    for (int j = 1; j <= WorldDim; j++) {
                         if(Math.abs(i-x)==1 || Math.abs(j-y)==1){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
@@ -331,8 +331,8 @@ public class TreasureFinder {
                 }
             case "3":
                 addClause(x,y,+1,DetectorOffset);
-                for (int i = 0; i < WorldDim; i++) {
-                    for (int j = 0; j < WorldDim; j++) {
+                for (int i = 1; i <= WorldDim; i++) {
+                    for (int j = 1; j <= WorldDim; j++) {
                         if(Math.abs(i-x)==2 || Math.abs(j-y)==2){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
@@ -340,8 +340,8 @@ public class TreasureFinder {
                 }
             case "0":
                 addClause(x,y,+1,DetectorOffset);
-                for (int i = 0; i < WorldDim; i++) {
-                    for (int j = 0; j < WorldDim; j++) {
+                for (int i = 1; i <= WorldDim; i++) {
+                    for (int j = 1; j <= WorldDim; j++) {
                         if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
@@ -452,8 +452,8 @@ public class TreasureFinder {
      **/
     public void performInferenceQuestions() throws TimeoutException {
         futureToPast = new ArrayList<>();
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = 0; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = 1; j <= WorldDim; j++) {
                 int index = coordToLineal(i, j, TreasureFutureOffset);
                 int indexPast = coordToLineal(i, j, TreasurePastOffset);
                 VecInt positiveVar = new VecInt();
@@ -512,8 +512,8 @@ public class TreasureFinder {
      * We need to save the id for the first variable of detector set variables
      */
     private void pirateClauses() throws ContradictionException {
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = 0; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = 1; j <= WorldDim; j++) {
                 for (int k = 0; k < 2; k++) {
                     if(k==0){
                         pirateAboveImpl(i,j);
@@ -536,8 +536,8 @@ public class TreasureFinder {
 
         if(DetectorOffset == 0){ DetectorOffset = actualLiteral;}
 
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = 0; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = 1; j <= WorldDim; j++) {
                 for (int k = 0; k < 4; k++) { //Possible values of our detector
                     switch (k){
                         case 0:
@@ -565,8 +565,8 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void detectorImplications(int x, int y, int range) throws ContradictionException {
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = 0; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = 1; j <= WorldDim; j++) {
                 if(Math.abs(i-x)==range || Math.abs(j-y)==range){}
                 else{
                     VecInt implication = new VecInt();
@@ -588,8 +588,8 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void detectorImplicationsCase0(int x, int y) throws ContradictionException {
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = 0; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = 1; j <= WorldDim; j++) {
                 if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){}
                 else{
                     VecInt implication = new VecInt();
@@ -610,7 +610,7 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void pirateAboveImpl(int x, int y) throws ContradictionException {
-        for (int i = 0; i < WorldDim; i++) {
+        for (int i = 1; i <= WorldDim; i++) {
             for (int j = y; j >0; j--) {
                 VecInt implication = new VecInt();
                 implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
@@ -629,8 +629,8 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void pirateBelowImpl(int x, int y) throws ContradictionException {
-        for (int i = 0; i < WorldDim; i++) {
-            for (int j = y; j < WorldDim; j++) {
+        for (int i = 1; i <= WorldDim; i++) {
+            for (int j = y; j <= WorldDim; j++) {
                 VecInt implication = new VecInt();
                 implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
                 implication.insertFirst(-(coordToLineal(i, j, TreasureFutureOffset)));
@@ -669,7 +669,7 @@ public class TreasureFinder {
     private void futureState() throws ContradictionException {
 
         VecInt futureInf = new VecInt();
-        TreasurePastOffset = actualLiteral;
+        TreasureFutureOffset = actualLiteral;
         for (int i = 0; i < WorldLinealDim; i++) {
             futureInf.insertFirst(actualLiteral);
             actualLiteral+=1;

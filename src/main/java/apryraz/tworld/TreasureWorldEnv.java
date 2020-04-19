@@ -134,13 +134,17 @@ public class TreasureWorldEnv {
     private String metalSensorReading(int x, int y){
         if(x == TreasureX && y == TreasureY){
             return "1";
-        }else if(( x >= TreasureX - 1 || x <= TreasureX + 1 ) && ( y >= TreasureY - 1 || y <= TreasureY + 1 )){
+        }else if(pitagor(Math.abs(TreasureX-x),Math.abs(TreasureY-y)) == 1){
             return "2";
-        }else if(( x >= TreasureX - 2 || x <= TreasureX + 2 ) && ( y >= TreasureY - 2 || y <= TreasureY + 2 )){
+        }else if(pitagor(Math.abs(TreasureX-x),Math.abs(TreasureY-y)) == 2){
             return "3";
         }else{
             return "0";
         }
+    }
+    public static double pitagor (int x , int y){
+        double c = Math.sqrt((x*x)+(y*y));
+        return Math.floor(c);
     }
 
 }
