@@ -55,7 +55,7 @@ public class TreasureWorld {
      * arg[4] = file name with sequence of steps to perform
      * arg[5] = file name with list of pirate positions
      **/
-    public static void main(String[] args) throws ParseFormatException,
+    public static void main(String[] args) throws
             IOException, ContradictionException, TimeoutException {
 
         if (args.length < 5) {
@@ -72,9 +72,9 @@ public class TreasureWorld {
     }
     //TODO: TreasureWorld -> check if pirate positions needed or just done
      /*     TreasureWorldEnv -> check if metalsensorReading is working
-            TreasureFinder -> implement classes: pirateClauses, detectorClauses (buildgamma solver)
-                    check how if finds the pirate, val1 ? // totalnumvariables?
+            TreasureFinder -> implement classes: pirateClauses, detectorClauses (buildgamma solver) // totalNumVariables calcular
+                    check how it finds the pirate, val1 ? // totalnumvariables?
                     check if addEvidenceClauses is working
-
+            Test -> test-it and check if testCoordToLineal needed
     */
 }

@@ -1,4 +1,4 @@
 test1 (states1.txt steps1.txt pirates1.txt):  4x4 world, treasure at 3,3, pirate at 4,4,   5 steps 
-test2 (states2.txt  steps2.txt pirates2.txt):  6x6 world, treasure at 4,4, pirate at 1,3,  4 steps 
-test3 (states3.txt  steps3.txt pirates3.txt):  7x7 world, treasure at 5,4,  pirates at 1,3 6,4,  7 steps 
-test4 (states4.txt  steps4.txt pirates4.txt):  8x8 world, treasure at 5,5, pirates at 1,3  6,4 7 steps
+test2 (states2.txt  steps2.txt pirates2.txt):  6x6 world, treasure at 4,4, pirate at 1,3,  5 steps 
+test3 (states3.txt  steps3.txt pirates3.txt):  7x7 world, treasure at 5,4,  pirates at 1,3 2,5    7 steps 
+test4 (states4.txt  steps4.txt pirates4.txt):  8x8 world, treasure at 3,7, pirate at 4,4   6 steps

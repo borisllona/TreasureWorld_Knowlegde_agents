@@ -80,7 +80,7 @@ public class TreasureFinder {
      **/
     int TreasurePastOffset;
     int TreasureFutureOffset;
-    int DetectorOffset;
+    int DetectorOffset=0;
     int actualLiteral;
 
 
@@ -172,6 +172,11 @@ public class TreasureFinder {
      * original Treasure World, this would be to use the Smelll Sensor to get
      * a binary answer, and then to update the current state according to the
      * result of the logical inferences performed by the agent with its formula.
+     *
+     * @throws IOException            when opening states or steps file.
+     * @throws ContradictionException if inserting contradictory information to solver.
+     * @throws TimeoutException       if solver's isSatisfiable operation spends more
+     * 	                                 time computing than a certain timeout.
      **/
     public void runNextStep() throws
             IOException, ContradictionException, TimeoutException {
@@ -283,7 +288,7 @@ public class TreasureFinder {
      *            It will a message with three fields: [0,1,2,3] x y
      **/
     public void processDetectorSensorAnswer(AMessage ans) throws
-            IOException, ContradictionException, TimeoutException {
+            ContradictionException {
 
         int x = Integer.parseInt(ans.getComp(1));
         int y = Integer.parseInt(ans.getComp(2));
@@ -307,30 +312,34 @@ public class TreasureFinder {
         System.out.println("Inserting detector evidence");
         switch (detects){
             case "1":
+                addClause(x,y,+1,DetectorOffset);
                 for (int i = 0; i < WorldDim; i++) {
                     for (int j = 0; j < WorldDim; j++) {
-                        if(x!=i && y!=j){
+                        if(x==i && y==j){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
             case "2":
+                addClause(x,y,+1,DetectorOffset);
                 for (int i = 0; i < WorldDim; i++) {
                     for (int j = 0; j < WorldDim; j++) {
-                        if(Math.abs(i-x)>1 || Math.abs(j-y)>1){
+                        if(Math.abs(i-x)==1 || Math.abs(j-y)==1){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
             case "3":
+                addClause(x,y,+1,DetectorOffset);
                 for (int i = 0; i < WorldDim; i++) {
                     for (int j = 0; j < WorldDim; j++) {
-                        if(Math.abs(i-x)>2 || Math.abs(j-y)>2){
+                        if(Math.abs(i-x)==2 || Math.abs(j-y)==2){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
             case "0":
+                addClause(x,y,+1,DetectorOffset);
                 for (int i = 0; i < WorldDim; i++) {
                     for (int j = 0; j < WorldDim; j++) {
                         if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){
@@ -413,9 +422,11 @@ public class TreasureFinder {
      * This function should add all the clauses stored in the list
      * futureToPast to the formula stored in solver.
      * Use the function addClause( VecInt ) to add each clause to the solver
+     *
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
      **/
-    public void addLastFutureClausesToPastClauses() throws IOException,
-            ContradictionException, TimeoutException {
+    public void addLastFutureClausesToPastClauses() throws ContradictionException {
         if(futureToPast != null){
             for(VecInt v: futureToPast){
                 solver.addClause(v);
@@ -439,23 +450,22 @@ public class TreasureFinder {
      * @throws TimeoutException needed for solver.isSatisfiable method, its thrown if
      *                          exceeds the timeout.
      **/
-    public void performInferenceQuestions() throws IOException,
-            ContradictionException, TimeoutException {
+    public void performInferenceQuestions() throws TimeoutException {
         futureToPast = new ArrayList<>();
         for (int i = 0; i < WorldDim; i++) {
             for (int j = 0; j < WorldDim; j++) {
-                int index = coordToLineal(i,j,TreasureFutureOffset);
-                int indexPast = coordToLineal(i,j,TreasurePastOffset);
+                int index = coordToLineal(i, j, TreasureFutureOffset);
+                int indexPast = coordToLineal(i, j, TreasurePastOffset);
                 VecInt positiveVar = new VecInt();
                 positiveVar.insertFirst(index);
 
                 //It checks if Γ + positiveVar it is unsatisfiable
                 //Then it adds the conclusion to the list but regarding to variables from the past
-                if(!(solver.isSatisfiable(positiveVar))){
+                if (!(solver.isSatisfiable(positiveVar))) {
                     VecInt past = new VecInt();
                     past.insertFirst(-(indexPast));
                     futureToPast.add(past);
-                    tfstate.set(i,j,"X");
+                    tfstate.set(i, j, "X");
                 }
             }
         }
@@ -466,14 +476,17 @@ public class TreasureFinder {
      * into the solver object.
      *
      * @return returns the solver object where the formula has been stored
+     *
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
      **/
-    public ISolver buildGamma() throws UnsupportedEncodingException,
-            FileNotFoundException, IOException, ContradictionException {
+    public ISolver buildGamma() throws ContradictionException {
+
         int totalNumVariables;
 
         // You must set this variable to the total number of boolean variables
         // in your formula Gamma
-        // totalNumVariables =  ???????????????????
+        totalNumVariables = WorldLinealDim*6;
         solver = SolverFactory.newDefault();
         solver.setTimeout(3600);
         solver.newVar(totalNumVariables);
@@ -488,7 +501,7 @@ public class TreasureFinder {
         pastTofutureState(); //Treasure state t-1 to Treasure state t+1
 
         detectorClauses(); //Implications from the metal sensor
-        pirateClauses();
+        pirateClauses();   //pirate implications?
 
         notInInitialPos(); //Implicates that the treasure is not in the initial position
 
@@ -498,10 +511,132 @@ public class TreasureFinder {
     /**
      * We need to save the id for the first variable of detector set variables
      */
-    private void pirateClauses() {
+    private void pirateClauses() throws ContradictionException {
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = 0; j < WorldDim; j++) {
+                for (int k = 0; k < 2; k++) {
+                    if(k==0){
+                        pirateAboveImpl(i,j);
+                    }else{
+                        pirateBelowImpl(i,j);
+                    }
+                    actualLiteral++;
+                }
+            }
+        }
     }
 
-    private void detectorClauses() {
+    /**
+     * We need to add the clauses that we are sure that is not a possible location of the treasure
+     *
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
+     */
+    private void detectorClauses() throws ContradictionException {
+
+        if(DetectorOffset == 0){ DetectorOffset = actualLiteral;}
+
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = 0; j < WorldDim; j++) {
+                for (int k = 0; k < 4; k++) { //Possible values of our detector
+                    switch (k){
+                        case 0:
+                            detectorImplicationsCase0(i,j);
+                        case 1:
+                            detectorImplications(i,j,0);
+                        case 2:
+                            detectorImplications(i,j,1);
+                        case 3:
+                            detectorImplications(i,j,2);
+                    }
+                    actualLiteral++;
+                }
+            }
+        }
+    }
+
+    /**Adds the implications between detector cases 1,2,3 and the locations where we are sure
+     * the treasure can not be.
+     *
+     * @param x detector x coord
+     * @param y detector y coord
+     * @param range it specifies the range  that the detector returns
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
+     */
+    private void detectorImplications(int x, int y, int range) throws ContradictionException {
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = 0; j < WorldDim; j++) {
+                if(Math.abs(i-x)==range || Math.abs(j-y)==range){}
+                else{
+                    VecInt implication = new VecInt();
+                    implication.insertFirst(-(coordToLineal(x,y,DetectorOffset)));
+                    implication.insertFirst(-(coordToLineal(i,j,TreasureFutureOffset)));
+                    solver.addClause(implication);
+                }
+            }
+        }
+    }
+    /**
+     *Case0 is a bit different from the other ranges implications because the others just look at a certain distance
+     * from the actual coord while case0 says; the treasure it's beyond Math.abs(i,j-x,y)>=3.
+     *
+     * @param x detector x coord
+     * @param y detector y coord
+     *
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
+     */
+    private void detectorImplicationsCase0(int x, int y) throws ContradictionException {
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = 0; j < WorldDim; j++) {
+                if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){}
+                else{
+                    VecInt implication = new VecInt();
+                    implication.insertFirst(-(coordToLineal(x,y,DetectorOffset)));
+                    implication.insertFirst(-(coordToLineal(i,j,TreasureFutureOffset)));
+                    solver.addClause(implication);
+                }
+            }
+        }
+    }
+
+    /**Adds the implications between pirate saying treasure is above and locations
+     * were the trasure cannot be located.
+     *
+     * @param x detector x coord
+     * @param y detector y coord
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
+     */
+    private void pirateAboveImpl(int x, int y) throws ContradictionException {
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = y; j >0; j--) {
+                VecInt implication = new VecInt();
+                implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
+                implication.insertFirst(-(coordToLineal(i, j, TreasureFutureOffset)));
+                solver.addClause(implication);
+            }
+        }
+    }
+
+    /**Adds the implications between detector cases 1,2,3 and the locations where we are sure
+     * the treasure can not be.
+     *
+     * @param x detector x coord
+     * @param y detector y coord
+     * @throws ContradictionException it must be included when adding clauses to a solver,
+     *      * it prevents from inserting contradictory clauses in the formula.
+     */
+    private void pirateBelowImpl(int x, int y) throws ContradictionException {
+        for (int i = 0; i < WorldDim; i++) {
+            for (int j = y; j < WorldDim; j++) {
+                VecInt implication = new VecInt();
+                implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
+                implication.insertFirst(-(coordToLineal(i, j, TreasureFutureOffset)));
+                solver.addClause(implication);
+            }
+        }
     }
 
     /**
