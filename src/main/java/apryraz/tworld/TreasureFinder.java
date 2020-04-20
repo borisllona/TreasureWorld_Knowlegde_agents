@@ -80,7 +80,12 @@ public class TreasureFinder {
      **/
     int TreasurePastOffset;
     int TreasureFutureOffset;
-    int DetectorOffset=0;
+    int Detector0Offset=0;
+    int Detector1Offset=0;
+    int Detector2Offset=0;
+    int Detector3Offset=0;
+    int pirateAboveOffset=0;
+    int pirateBelowOffset=0;
     int actualLiteral;
 
 
@@ -312,7 +317,7 @@ public class TreasureFinder {
         System.out.println("Inserting detector evidence");
         switch (detects){
             case "1":
-                addClause(x,y,+1,DetectorOffset);
+                addClause(x,y,+1,Detector1Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(x==i && y==j){
@@ -321,7 +326,7 @@ public class TreasureFinder {
                     }
                 }
             case "2":
-                addClause(x,y,+1,DetectorOffset);
+                addClause(x,y,+1,Detector2Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(Math.abs(i-x)==1 || Math.abs(j-y)==1){
@@ -330,16 +335,16 @@ public class TreasureFinder {
                     }
                 }
             case "3":
-                addClause(x,y,+1,DetectorOffset);
+                addClause(x,y,+1,Detector3Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if(Math.abs(i-x)==2 || Math.abs(j-y)==2){
+                        if(i==1 && j ==3){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
             case "0":
-                addClause(x,y,+1,DetectorOffset);
+                addClause(x,y,+1,Detector0Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){
@@ -347,6 +352,10 @@ public class TreasureFinder {
                         }
                     }
                 }
+            //default:
+                //System.out.println("Treasure found!");
+                //addClause(x,y,);
+                //TODO: TREASURE CLAUSE
         }
     }
 
@@ -356,7 +365,7 @@ public class TreasureFinder {
      * @param x coordinate of the possition x
      * @param y coordinate for the possition y
      * @param sign it indicates the sign of an specific literal, may be -1 or 1
-     * @param offset it is the offset that correspounds to the subset of variables
+     * @param offset it is the offset that corresponds to the subset of variables
      *               that contains that literal.
      * @throws ContradictionException it must be included when adding clauses to a solver,
      * it prevents from inserting contradictory clauses in the formula.
@@ -365,14 +374,13 @@ public class TreasureFinder {
         int lc;
         VecInt evidence = new VecInt();
 
-        if(sign == -1){
-            lc = -(coordToLineal(x,y,offset));
-        }else{
+        if(sign == +1){
             lc = coordToLineal(x,y,offset);
+        }else{
+            lc = -(coordToLineal(x,y,offset));
         }
         evidence.insertFirst(lc);
         solver.addClause(evidence);
-
     }
 
     /**
@@ -399,19 +407,22 @@ public class TreasureFinder {
      * it prevents from inserting contradictory clauses in the formula.
      */
     public void processPirateAnswer(AMessage ans) throws ContradictionException{
+        int x = Integer.parseInt(ans.getComp(1));
         int y = Integer.parseInt(ans.getComp(2));
         String isup = ans.getComp(0);
         //DETECTOR OFFSET I PIRATE OFFSET?
         if(isup.equals("yes")){
+            addClause(x,y,+1,pirateBelowOffset);
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y; j > 0; j--) {
+                for (int j = y+1; j <= WorldDim; j++) {
                     addClause(i,j,-1,TreasureFutureOffset);
                 }
             }
         }else{
+            addClause(x,y,+1,pirateAboveOffset);
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y+1; j <= WorldDim; j++) {
-                    addClause(i,j,-1,TreasureFutureOffset);
+                for (int j = y; j > 0; j--) {
+                    addClause(i, j, -1, TreasureFutureOffset);
                 }
             }
         }
@@ -454,8 +465,8 @@ public class TreasureFinder {
         futureToPast = new ArrayList<>();
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = 1; j <= WorldDim; j++) {
-                int index = coordToLineal(i, j, TreasureFutureOffset);
                 int indexPast = coordToLineal(i, j, TreasurePastOffset);
+                int index = coordToLineal(i, j, TreasureFutureOffset);
                 VecInt positiveVar = new VecInt();
                 positiveVar.insertFirst(index);
 
@@ -516,8 +527,10 @@ public class TreasureFinder {
             for (int j = 1; j <= WorldDim; j++) {
                 for (int k = 0; k < 2; k++) {
                     if(k==0){
+                        if(pirateAboveOffset == 0){ pirateAboveOffset = actualLiteral;} // fixes 0 is not a valid variable identifier
                         pirateAboveImpl(i,j);
                     }else{
+                        if(pirateBelowOffset == 0){ pirateBelowOffset = actualLiteral;}
                         pirateBelowImpl(i,j);
                     }
                     actualLiteral++;
@@ -533,21 +546,22 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void detectorClauses() throws ContradictionException {
-
-        if(DetectorOffset == 0){ DetectorOffset = actualLiteral;}
-
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = 1; j <= WorldDim; j++) {
                 for (int k = 0; k < 4; k++) { //Possible values of our detector
                     switch (k){
                         case 0:
-                            detectorImplicationsCase0(i,j);
+                            if(Detector0Offset == 0){ Detector0Offset = actualLiteral;}
+                            detectorImplicationsCase0(i,j,Detector0Offset);
                         case 1:
-                            detectorImplications(i,j,0);
+                            if(Detector1Offset == 0){ Detector1Offset = actualLiteral;}
+                            detectorImplications(i,j,0,Detector1Offset);
                         case 2:
-                            detectorImplications(i,j,1);
+                            if(Detector2Offset == 0){ Detector2Offset = actualLiteral;}
+                            detectorImplications(i,j,1,Detector2Offset);
                         case 3:
-                            detectorImplications(i,j,2);
+                            if(Detector3Offset == 0){ Detector3Offset = actualLiteral;}
+                            detectorImplications(i,j,2,Detector3Offset);
                     }
                     actualLiteral++;
                 }
@@ -564,13 +578,13 @@ public class TreasureFinder {
      * @throws ContradictionException it must be included when adding clauses to a solver,
      *      * it prevents from inserting contradictory clauses in the formula.
      */
-    private void detectorImplications(int x, int y, int range) throws ContradictionException {
+    private void detectorImplications(int x, int y, int range, int offset) throws ContradictionException {
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = 1; j <= WorldDim; j++) {
                 if(Math.abs(i-x)==range || Math.abs(j-y)==range){}
                 else{
                     VecInt implication = new VecInt();
-                    implication.insertFirst(-(coordToLineal(x,y,DetectorOffset)));
+                    implication.insertFirst(-(coordToLineal(x,y,offset)));
                     implication.insertFirst(-(coordToLineal(i,j,TreasureFutureOffset)));
                     solver.addClause(implication);
                 }
@@ -587,13 +601,13 @@ public class TreasureFinder {
      * @throws ContradictionException it must be included when adding clauses to a solver,
      *      * it prevents from inserting contradictory clauses in the formula.
      */
-    private void detectorImplicationsCase0(int x, int y) throws ContradictionException {
+    private void detectorImplicationsCase0(int x, int y, int offset) throws ContradictionException {
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = 1; j <= WorldDim; j++) {
                 if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){}
                 else{
                     VecInt implication = new VecInt();
-                    implication.insertFirst(-(coordToLineal(x,y,DetectorOffset)));
+                    implication.insertFirst(-(coordToLineal(x,y,offset)));
                     implication.insertFirst(-(coordToLineal(i,j,TreasureFutureOffset)));
                     solver.addClause(implication);
                 }
@@ -613,7 +627,7 @@ public class TreasureFinder {
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = y; j >0; j--) {
                 VecInt implication = new VecInt();
-                implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
+                implication.insertFirst(-(coordToLineal(x, y, pirateAboveOffset)));
                 implication.insertFirst(-(coordToLineal(i, j, TreasureFutureOffset)));
                 solver.addClause(implication);
             }
@@ -632,7 +646,7 @@ public class TreasureFinder {
         for (int i = 1; i <= WorldDim; i++) {
             for (int j = y; j <= WorldDim; j++) {
                 VecInt implication = new VecInt();
-                implication.insertFirst(-(coordToLineal(x, y, DetectorOffset)));
+                implication.insertFirst(-(coordToLineal(x, y, pirateBelowOffset)));
                 implication.insertFirst(-(coordToLineal(i, j, TreasureFutureOffset)));
                 solver.addClause(implication);
             }
@@ -667,7 +681,6 @@ public class TreasureFinder {
      *
      **/
     private void futureState() throws ContradictionException {
-
         VecInt futureInf = new VecInt();
         TreasureFutureOffset = actualLiteral;
         for (int i = 0; i < WorldLinealDim; i++) {
@@ -701,10 +714,10 @@ public class TreasureFinder {
      */
     private void notInInitialPos() throws ContradictionException{
         VecInt clause = new VecInt();
-        clause.insertFirst(-TreasurePastOffset);
+        clause.insertFirst(-TreasureFutureOffset);
         solver.addClause(clause);
         clause.clear();
-        clause.insertFirst(-TreasureFutureOffset);
+        clause.insertFirst(-TreasurePastOffset);
         solver.addClause(clause);
     }
 
