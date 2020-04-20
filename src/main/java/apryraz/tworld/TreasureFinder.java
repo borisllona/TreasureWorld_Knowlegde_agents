@@ -196,11 +196,11 @@ public class TreasureFinder {
 
 
         // Next, use Detector sensor to discover new information
-        //processDetectorSensorAnswer(DetectsAt());
+        processDetectorSensorAnswer(DetectsAt());
         // If a pirate was found at new agent position, ask question to
         // pirate and process Answer to discover new information
         if (pirateFound == 1) {
-            processPirateAnswer(IsTreasureUpOrDown());
+            //processPirateAnswer(IsTreasureUpOrDown());
         }
 
         // Perform logical consequence questions for all the positions
@@ -320,38 +320,43 @@ public class TreasureFinder {
                 addClause(x,y,+1,Detector1Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if(x==i && y==j){
+                        if(!(x==i && y==j)){
                             addClause(x,y,-1,TreasureFutureOffset);
-                    }
+                        }
                     }
                 }
+                System.out.println("Treasure found!");
+                break;
             case "2":
                 addClause(x,y,+1,Detector2Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) == 1)){
+                        if(pitagor(Math.abs(i-x),Math.abs(j-y)) != 1){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
+                break;
             case "3":
                 addClause(x,y,+1,Detector3Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) == 2)){
+                        if(pitagor(Math.abs(i-x),Math.abs(j-y)) != 2){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
+                break;
             case "0":
                 addClause(x,y,+1,Detector0Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) >= 3)){
+                        if(pitagor(Math.abs(i-x),Math.abs(j-y)) < 3){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
                 }
+                break;
             //default:
                 //System.out.println("Treasure found!");
                 //addClause(x,y,);
@@ -379,10 +384,10 @@ public class TreasureFinder {
         int lc;
         VecInt evidence = new VecInt();
 
-        if(sign == +1){
-            lc = coordToLineal(x,y,offset);
-        }else{
+        if(sign == -1){
             lc = -(coordToLineal(x,y,offset));
+        }else{
+            lc = coordToLineal(x,y,offset);
         }
         evidence.insertFirst(lc);
         solver.addClause(evidence);
@@ -419,15 +424,15 @@ public class TreasureFinder {
         if(isup.equals("yes")){
             addClause(x,y,+1,pirateAboveOffset);
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y+1; j <= WorldDim; j++) {
-                    addClause(i,j,-1,TreasureFutureOffset);
+                for (int j = y; j > 0; j--) {
+                    addClause(i, j, -1, TreasureFutureOffset);
                 }
             }
         }else{
             addClause(x,y,+1,pirateBelowOffset);
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y; j > 0; j--) {
-                    addClause(i, j, -1, TreasureFutureOffset);
+                for (int j = y+1; j <= WorldDim; j++) {
+                    addClause(i,j,-1,TreasureFutureOffset);
                 }
             }
         }
@@ -512,8 +517,9 @@ public class TreasureFinder {
 
         // call here functions to add the differen sets of clauses
         // of Gamma to the solver object
-        pastState(); //Treasure state t-1, 1 clause [(1,1)-(n,n)]
-        futureState(); //Treasure state t+1, 1 clause [(1,1)-(n,n)]
+
+        pastState(); //Treasure state t-1
+        futureState(); //Treasure state t+1
         pastTofutureState(); //Treasure state t-1 to Treasure state t+1
 
         detectorClauses(); //Implications from the metal sensor
@@ -526,6 +532,9 @@ public class TreasureFinder {
 
     /**
      * We need to save the id for the first variable of detector set variables
+     *
+     *  @throws ContradictionException it must be included when adding clauses to a solver,
+     *      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void pirateClauses() throws ContradictionException {
         for (int i = 1; i <= WorldDim; i++) {
