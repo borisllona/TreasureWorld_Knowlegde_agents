@@ -196,10 +196,10 @@ public class TreasureFinder {
 
 
         // Next, use Detector sensor to discover new information
-        processDetectorSensorAnswer(DetectsAt());
+        //processDetectorSensorAnswer(DetectsAt());
         // If a pirate was found at new agent position, ask question to
         // pirate and process Answer to discover new information
-        if (pirateFound == 1) { /*COMO ENCUENTRA AL PIRATA????????????????????*/
+        if (pirateFound == 1) {
             processPirateAnswer(IsTreasureUpOrDown());
         }
 
@@ -322,14 +322,14 @@ public class TreasureFinder {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(x==i && y==j){
                             addClause(x,y,-1,TreasureFutureOffset);
-                        }
+                    }
                     }
                 }
             case "2":
                 addClause(x,y,+1,Detector2Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if(Math.abs(i-x)==1 || Math.abs(j-y)==1){
+                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) == 1)){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
@@ -338,7 +338,7 @@ public class TreasureFinder {
                 addClause(x,y,+1,Detector3Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if(i==1 && j ==3){
+                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) == 2)){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
@@ -347,7 +347,7 @@ public class TreasureFinder {
                 addClause(x,y,+1,Detector0Offset);
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
-                        if(Math.abs(i-x)>=3 || Math.abs(j-y)>=3){
+                        if((pitagor(Math.abs(i-x),Math.abs(j-y)) >= 3)){
                             addClause(x,y,-1,TreasureFutureOffset);
                         }
                     }
@@ -357,6 +357,11 @@ public class TreasureFinder {
                 //addClause(x,y,);
                 //TODO: TREASURE CLAUSE
         }
+    }
+
+    public static double pitagor (int x , int y){
+        double c = Math.sqrt((x*x)+(y*y));
+        return Math.floor(c);
     }
 
     /**
@@ -412,14 +417,14 @@ public class TreasureFinder {
         String isup = ans.getComp(0);
         //DETECTOR OFFSET I PIRATE OFFSET?
         if(isup.equals("yes")){
-            addClause(x,y,+1,pirateBelowOffset);
+            addClause(x,y,+1,pirateAboveOffset);
             for (int i = 1; i <= WorldDim; i++) {
                 for (int j = y+1; j <= WorldDim; j++) {
                     addClause(i,j,-1,TreasureFutureOffset);
                 }
             }
         }else{
-            addClause(x,y,+1,pirateAboveOffset);
+            addClause(x,y,+1,pirateBelowOffset);
             for (int i = 1; i <= WorldDim; i++) {
                 for (int j = y; j > 0; j--) {
                     addClause(i, j, -1, TreasureFutureOffset);
