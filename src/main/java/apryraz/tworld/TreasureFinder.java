@@ -200,7 +200,7 @@ public class TreasureFinder {
         // If a pirate was found at new agent position, ask question to
         // pirate and process Answer to discover new information
         if (pirateFound == 1) {
-            //processPirateAnswer(IsTreasureUpOrDown());
+            processPirateAnswer(IsTreasureUpOrDown());
         }
 
         // Perform logical consequence questions for all the positions
@@ -321,7 +321,7 @@ public class TreasureFinder {
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(!(x==i && y==j)){
-                            addClause(x,y,-1,TreasureFutureOffset);
+                            addClause(i,j,-1,TreasureFutureOffset);
                         }
                     }
                 }
@@ -332,7 +332,7 @@ public class TreasureFinder {
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(pitagor(Math.abs(i-x),Math.abs(j-y)) != 1){
-                            addClause(x,y,-1,TreasureFutureOffset);
+                            addClause(i,j,-1,TreasureFutureOffset);
                         }
                     }
                 }
@@ -342,7 +342,7 @@ public class TreasureFinder {
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(pitagor(Math.abs(i-x),Math.abs(j-y)) != 2){
-                            addClause(x,y,-1,TreasureFutureOffset);
+                            addClause(i,j,-1,TreasureFutureOffset);
                         }
                     }
                 }
@@ -352,15 +352,11 @@ public class TreasureFinder {
                 for (int i = 1; i <= WorldDim; i++) {
                     for (int j = 1; j <= WorldDim; j++) {
                         if(pitagor(Math.abs(i-x),Math.abs(j-y)) < 3){
-                            addClause(x,y,-1,TreasureFutureOffset);
+                            addClause(i,j,-1,TreasureFutureOffset);
                         }
                     }
                 }
                 break;
-            //default:
-                //System.out.println("Treasure found!");
-                //addClause(x,y,);
-                //TODO: TREASURE CLAUSE
         }
     }
 
@@ -383,7 +379,6 @@ public class TreasureFinder {
     private void addClause(int x, int y, int sign, int offset) throws ContradictionException {
         int lc;
         VecInt evidence = new VecInt();
-
         if(sign == -1){
             lc = -(coordToLineal(x,y,offset));
         }else{
@@ -422,16 +417,16 @@ public class TreasureFinder {
         String isup = ans.getComp(0);
         //DETECTOR OFFSET I PIRATE OFFSET?
         if(isup.equals("yes")){
-            addClause(x,y,+1,pirateAboveOffset);
+            System.out.println("ABOVE");
             for (int i = 1; i <= WorldDim; i++) {
                 for (int j = y; j > 0; j--) {
-                    addClause(i, j, -1, TreasureFutureOffset);
+                    addClause(i,j, -1, TreasureFutureOffset);
                 }
             }
         }else{
-            addClause(x,y,+1,pirateBelowOffset);
+            System.out.println("BELOW");
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y+1; j <= WorldDim; j++) {
+                for (int j = y; j <= WorldDim; j++) {
                     addClause(i,j,-1,TreasureFutureOffset);
                 }
             }
@@ -507,7 +502,7 @@ public class TreasureFinder {
 
         // You must set this variable to the total number of boolean variables
         // in your formula Gamma
-        totalNumVariables = WorldLinealDim*6;
+        totalNumVariables = WorldLinealDim*8;
         solver = SolverFactory.newDefault();
         solver.setTimeout(3600);
         solver.newVar(totalNumVariables);
@@ -537,15 +532,19 @@ public class TreasureFinder {
      *      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void pirateClauses() throws ContradictionException {
-        for (int i = 1; i <= WorldDim; i++) {
-            for (int j = 1; j <= WorldDim; j++) {
-                for (int k = 0; k < 2; k++) {
-                    if(k==0){
-                        if(pirateAboveOffset == 0){ pirateAboveOffset = actualLiteral;} // fixes 0 is not a valid variable identifier
-                        pirateAboveImpl(i,j);
-                    }else{
-                        if(pirateBelowOffset == 0){ pirateBelowOffset = actualLiteral;}
-                        pirateBelowImpl(i,j);
+        for (int k = 0; k < 2; k++) {
+            for (int i = 1; i <= WorldDim; i++) {
+                for (int j = 1; j <= WorldDim; j++) {
+                    if (k == 0) {
+                        if (pirateAboveOffset == 0) {
+                            pirateAboveOffset = actualLiteral;
+                        } // fixes 0 is not a valid variable identifier
+                        pirateAboveImpl(i, j);
+                    } else {
+                        if (pirateBelowOffset == 0) {
+                            pirateBelowOffset = actualLiteral;
+                        }
+                        pirateBelowImpl(i, j);
                     }
                     actualLiteral++;
                 }
@@ -560,22 +559,26 @@ public class TreasureFinder {
      *      * it prevents from inserting contradictory clauses in the formula.
      */
     private void detectorClauses() throws ContradictionException {
-        for (int i = 1; i <= WorldDim; i++) {
-            for (int j = 1; j <= WorldDim; j++) {
-                for (int k = 0; k < 4; k++) { //Possible values of our detector
-                    switch (k){
-                        case 0:
-                            if(Detector0Offset == 0){ Detector0Offset = actualLiteral;}
-                            detectorImplicationsCase0(i,j,Detector0Offset);
-                        case 1:
-                            if(Detector1Offset == 0){ Detector1Offset = actualLiteral;}
-                            detectorImplications(i,j,0,Detector1Offset);
-                        case 2:
-                            if(Detector2Offset == 0){ Detector2Offset = actualLiteral;}
-                            detectorImplications(i,j,1,Detector2Offset);
-                        case 3:
-                            if(Detector3Offset == 0){ Detector3Offset = actualLiteral;}
-                            detectorImplications(i,j,2,Detector3Offset);
+        for (int k = 0; k < 4; k++) { //Possible values of our detector
+            for (int i = 1; i <= WorldDim; i++) {
+                for (int j = 1; j <= WorldDim; j++) {
+                        switch (k){
+                            case 0:
+                                if(Detector0Offset == 0){ Detector0Offset = actualLiteral;}
+                                detectorImplicationsCase0(i,j,Detector0Offset);
+                                break;
+                            case 1:
+                                if(Detector1Offset == 0){ Detector1Offset = actualLiteral;}
+                                detectorImplications(i,j,0,Detector1Offset);
+                                break;
+                            case 2:
+                                if(Detector2Offset == 0){ Detector2Offset = actualLiteral;}
+                                detectorImplications(i,j,1,Detector2Offset);
+                                break;
+                            case 3:
+                                if(Detector3Offset == 0){ Detector3Offset = actualLiteral;}
+                                detectorImplications(i,j,2,Detector3Offset);
+                                break;
                     }
                     actualLiteral++;
                 }
