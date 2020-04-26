@@ -154,7 +154,7 @@ public class TreasureFinderTest {
      * @throws TimeoutException      needed for solver.isSatisfiable method, its thrown if
      *                               exceeds the timeout.
      **/
-    @Test public void testSolver1()   throws ContradictionException, TimeoutException {
+    @Test public void testSolver()   throws ContradictionException, TimeoutException {
         ISolver solver = SolverFactory.newDefault();
         solver.newVar(2);
         solver.setTimeout(3600);
@@ -169,35 +169,19 @@ public class TreasureFinderTest {
         clause2.insertFirst(-1);
         clause2.insertFirst(-2);
         solver.addClause(clause2);
-        Assert.assertFalse(solver.isSatisfiable());
-    }
-
-    /**
-     * The propouse of this test is to check that the solver is
-     * working correctly regardless of the rest of the program.
-     * Also it was useful during the development to understand better the way
-     * ISolver it works.
-     *
-     * @throws ContradictionException it must be included when adding clauses to a solver,
-     *                           it prevents from inserting contradictory clauses in the formula.
-     * @throws TimeoutException      needed for solver.isSatisfiable method, its thrown if
-     *                               exceeds the timeout.
-     **/
-    @Test public void testSolver2()   throws ContradictionException, TimeoutException {
-        ISolver solver = SolverFactory.newDefault();
-        solver.newVar(2);
-        solver.setTimeout(3600);
-
-        VecInt clause1 = new VecInt();
-        clause1.insertFirst(-1);
-        clause1.insertFirst(2);
-        solver.addClause(clause1);
         Assert.assertTrue(solver.isSatisfiable());
 
-        VecInt clause2 = new VecInt();
-        clause2.insertFirst(1);
-        clause2.insertFirst(-2);
-        solver.addClause(clause2);
+        VecInt clause3 = new VecInt();
+        clause3.insertFirst(-1);
+        clause3.insertFirst(2);
+        solver.addClause(clause3);
+        Assert.assertTrue(solver.isSatisfiable());
+
+        VecInt clause4 = new VecInt();
+        clause4.insertFirst(1);
+        clause4.insertFirst(-2);
+        solver.addClause(clause4);
+
         Assert.assertFalse(solver.isSatisfiable());
     }
 

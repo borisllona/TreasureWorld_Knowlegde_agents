@@ -35,7 +35,6 @@ public class TreasureWorld {
 
         // Set environment object, and load list of pirate positions
         TAgent.setEnvironment(EnvAgent);
-        //Pirate positions (needed? test)
 
         // load list of steps into the Finder Agent
         TAgent.loadListOfSteps(numSteps, fileSteps);
@@ -57,24 +56,16 @@ public class TreasureWorld {
      **/
     public static void main(String[] args) throws
             IOException, ContradictionException, TimeoutException {
-
-        //if (args.length < 5) {
-          //  System.out.println("You must specify all arguments needed");
-        //} else {
-            int wDim = 4;//Integer.parseInt(args[0]);
-            int tX = 3;//Integer.parseInt(args[1]);
-            int tY = 3;//Integer.parseInt(args[2]);
-            int numSteps = 5;//Integer.parseInt(args[3]);
-            String fileSteps = "tests/steps1.txt";//args[4];
-            String filePirates = "tests/pirates1.txt";//args[5];
+        if (args.length < 5) {
+            System.out.println("You must specify all arguments needed");
+        } else {
+            int wDim = Integer.parseInt(args[0]);
+            int tX = Integer.parseInt(args[1]);
+            int tY = Integer.parseInt(args[2]);
+            int numSteps = Integer.parseInt(args[3]);
+            String fileSteps = args[4];
+            String filePirates = args[5];
             runStepsSequence(wDim,tX,tY,numSteps,fileSteps,filePirates);
-        //}
+        }
     }
-    //TODO: TreasureWorld -> check if pirate positions needed or just done
-     /*     TreasureWorldEnv -> check if metalsensorReading is working
-            TreasureFinder -> implement classes: pirateClauses, detectorClauses (buildgamma solver) // totalNumVariables calcular
-                    check how it finds the pirate, val1 ? // totalnumvariables?
-                    check if addEvidenceClauses is working
-            Test -> test-it and check if testCoordToLineal needed
-    */
 }

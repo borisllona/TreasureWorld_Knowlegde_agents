@@ -194,7 +194,6 @@ public class TreasureFinder {
         // Also, record if a pirate was found at that position
         processMoveAnswer(moveToNext());
 
-
         // Next, use Detector sensor to discover new information
         processDetectorSensorAnswer(DetectsAt());
         // If a pirate was found at new agent position, ask question to
@@ -227,7 +226,7 @@ public class TreasureFinder {
             return moveTo(nextPosition.x, nextPosition.y);
         } else {
             System.out.println("NO MORE steps to perform at agent!");
-            return (new AMessage("NOMESSAGE", "", "","")); //par3 = ""
+            return (new AMessage("NOMESSAGE", "", "",""));
         }
     }
 
@@ -415,18 +414,16 @@ public class TreasureFinder {
         int x = Integer.parseInt(ans.getComp(1));
         int y = Integer.parseInt(ans.getComp(2));
         String isup = ans.getComp(0);
-        //DETECTOR OFFSET I PIRATE OFFSET?
+
         if(isup.equals("yes")){
-            System.out.println("ABOVE");
             for (int i = 1; i <= WorldDim; i++) {
                 for (int j = y; j > 0; j--) {
                     addClause(i,j, -1, TreasureFutureOffset);
                 }
             }
         }else{
-            System.out.println("BELOW");
             for (int i = 1; i <= WorldDim; i++) {
-                for (int j = y; j <= WorldDim; j++) {
+                for (int j = y+1; j <= WorldDim; j++) {
                     addClause(i,j,-1,TreasureFutureOffset);
                 }
             }
@@ -481,7 +478,7 @@ public class TreasureFinder {
                     VecInt past = new VecInt();
                     past.insertFirst(-(indexPast));
                     futureToPast.add(past);
-                    tfstate.set(i, j, "X");
+                    tfstate.set(j, i, "X");
                 }
             }
         }
@@ -502,7 +499,7 @@ public class TreasureFinder {
 
         // You must set this variable to the total number of boolean variables
         // in your formula Gamma
-        totalNumVariables = WorldLinealDim*8;
+        totalNumVariables = WorldLinealDim*4 + WorldLinealDim*2 + WorldLinealDim*2;
         solver = SolverFactory.newDefault();
         solver.setTimeout(3600);
         solver.newVar(totalNumVariables);
@@ -518,7 +515,7 @@ public class TreasureFinder {
         pastTofutureState(); //Treasure state t-1 to Treasure state t+1
 
         detectorClauses(); //Implications from the metal sensor
-        pirateClauses();   //pirate implications?
+        pirateClauses();   //pirate implications
 
         notInInitialPos(); //Implicates that the treasure is not in the initial position
 
@@ -526,7 +523,7 @@ public class TreasureFinder {
     }
 
     /**
-     * We need to save the id for the first variable of detector set variables
+     * We need to add all the clauses for the possible implications a pirate may have.
      *
      *  @throws ContradictionException it must be included when adding clauses to a solver,
      *      *      * it prevents from inserting contradictory clauses in the formula.
@@ -538,7 +535,7 @@ public class TreasureFinder {
                     if (k == 0) {
                         if (pirateAboveOffset == 0) {
                             pirateAboveOffset = actualLiteral;
-                        } // fixes 0 is not a valid variable identifier
+                        }
                         pirateAboveImpl(i, j);
                     } else {
                         if (pirateBelowOffset == 0) {
@@ -553,7 +550,7 @@ public class TreasureFinder {
     }
 
     /**
-     * We need to add the clauses that we are sure that is not a possible location of the treasure
+     * We need to add all the clauses for the possible implications the detector may have
      *
      * @throws ContradictionException it must be included when adding clauses to a solver,
      *      * it prevents from inserting contradictory clauses in the formula.

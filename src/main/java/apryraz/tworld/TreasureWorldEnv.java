@@ -21,7 +21,7 @@ public class TreasureWorldEnv {
      * @param dim         dimension of the world
      * @param tx          X position of Treasure
      * @param ty          Y position of Treasure
-     * @param piratesFile File with list of pirates locations
+     * @param piratesFile File with list of pirates locations<
      **/
     public TreasureWorldEnv(int dim, int tx, int ty, String piratesFile) {
 
@@ -44,7 +44,7 @@ public class TreasureWorldEnv {
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
                 String[] pirates = data.split(" ");
-                Collections.addAll(pirateLoc, pirates); //ISWORKING?
+                Collections.addAll(pirateLoc,pirates);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
